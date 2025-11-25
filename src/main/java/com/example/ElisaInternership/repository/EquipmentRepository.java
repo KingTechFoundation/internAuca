@@ -14,3 +14,8 @@ public interface EquipmentRepository extends JpaRepository<Equipment, Long> {
     List<Equipment> findByLabIdAndStatus(Long labId, EquipmentStatus status);
 }
 
+
+
+
+
+

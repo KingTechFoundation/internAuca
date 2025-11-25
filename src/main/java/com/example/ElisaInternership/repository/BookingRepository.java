@@ -23,3 +23,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByLabIdAndStartTimeBetween(Long labId, LocalDateTime start, LocalDateTime end);
 }
 
+
+
+
+
+

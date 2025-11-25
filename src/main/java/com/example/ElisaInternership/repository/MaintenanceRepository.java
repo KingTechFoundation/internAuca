@@ -15,3 +15,8 @@ public interface MaintenanceRepository extends JpaRepository<Maintenance, Long> 
     List<Maintenance> findByRequestedById(Long userId);
 }
 
+
+
+
+
+

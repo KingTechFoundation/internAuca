@@ -12,3 +12,8 @@ public interface LabRepository extends JpaRepository<Lab, Long> {
     List<Lab> findByLabManagerId(Long labManagerId);
 }
 
+
+
+
+
+

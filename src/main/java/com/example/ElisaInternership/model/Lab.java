@@ -1,5 +1,6 @@
 package com.example.ElisaInternership.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -44,9 +45,11 @@ public class Lab {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "lab", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Equipment> equipment = new ArrayList<>();
 
     @OneToMany(mappedBy = "lab", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Booking> bookings = new ArrayList<>();
 
     @PrePersist
@@ -153,4 +156,8 @@ public class Lab {
         MAIN_COMPUTER_LAB, EXTENSION_104, EXTENSION_108, EXTENSION_204, EXTENSION_209, EXTENSION_310, ENGLISH_LAB
     }
 }
+
+
+
+
 

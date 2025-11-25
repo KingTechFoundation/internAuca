@@ -78,3 +78,8 @@ export const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   );
 };
 
+
+
+
+
+

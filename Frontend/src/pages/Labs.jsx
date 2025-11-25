@@ -1,16 +1,33 @@
 import { useState, useEffect } from 'react';
-import { labAPI } from '../services/api';
+import { labAPI, userAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Select } from '../components/ui/select';
 import { Building2, MapPin, Users, Plus } from 'lucide-react';
 
 export const Labs = () => {
+  const { isAdmin } = useAuth();
   const [labs, setLabs] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const [isAddLabOpen, setIsAddLabOpen] = useState(false);
+  const [managers, setManagers] = useState([]);
+  const [newLab, setNewLab] = useState({
+    name: '',
+    location: '',
+    capacity: '',
+    type: 'MAIN_COMPUTER_LAB',
+    labManagerId: ''
+  });
   useEffect(() => {
     loadLabs();
-  }, []);
+    if (isAdmin) {
+      loadManagers();
+    }
+  }, [isAdmin]);
 
   const loadLabs = async () => {
     try {
@@ -20,6 +37,38 @@ export const Labs = () => {
       console.error('Failed to load labs:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadManagers = async () => {
+    try {
+      const response = await userAPI.getByRole('LAB_MANAGER');
+      setManagers(response.data.data);
+    } catch (error) {
+      console.error('Failed to load managers:', error);
+    }
+  };
+
+  const handleCreateLab = async (e) => {
+    e.preventDefault();
+    try {
+      await labAPI.create({
+        ...newLab,
+        capacity: parseInt(newLab.capacity),
+        labManagerId: newLab.labManagerId ? parseInt(newLab.labManagerId) : null
+      });
+      setIsAddLabOpen(false);
+      loadLabs();
+      setNewLab({
+        name: '',
+        location: '',
+        capacity: '',
+        type: 'MAIN_COMPUTER_LAB',
+        labManagerId: ''
+      });
+    } catch (error) {
+      console.error('Failed to create lab:', error);
+      alert(error.response?.data?.message || 'Failed to create lab');
     }
   };
 
@@ -42,6 +91,84 @@ export const Labs = () => {
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Labs</h1>
             <p className="text-xl text-gray-600">View all available laboratories</p>
           </div>
+          {isAdmin && (
+            <Dialog open={isAddLabOpen} onOpenChange={setIsAddLabOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center space-x-2">
+                  <Plus className="h-4 w-4" />
+                  <span>Add Lab</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Lab</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleCreateLab} className="space-y-4">
+                  <div>
+                    <Label htmlFor="name">Lab Name</Label>
+                    <Input
+                      id="name"
+                      value={newLab.name}
+                      onChange={(e) => setNewLab({ ...newLab, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      value={newLab.location}
+                      onChange={(e) => setNewLab({ ...newLab, location: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="capacity">Capacity</Label>
+                    <Input
+                      id="capacity"
+                      type="number"
+                      value={newLab.capacity}
+                      onChange={(e) => setNewLab({ ...newLab, capacity: e.target.value })}
+                      required
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="type">Type</Label>
+                    <Select
+                      id="type"
+                      value={newLab.type}
+                      onChange={(e) => setNewLab({ ...newLab, type: e.target.value })}
+                    >
+                      <option value="MAIN_COMPUTER_LAB">Main Computer Lab</option>
+                      <option value="EXTENSION_104">Extension 104</option>
+                      <option value="EXTENSION_108">Extension 108</option>
+                      <option value="EXTENSION_204">Extension 204</option>
+                      <option value="EXTENSION_209">Extension 209</option>
+                      <option value="EXTENSION_310">Extension 310</option>
+                      <option value="ENGLISH_LAB">English Lab</option>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="manager">Lab Manager</Label>
+                    <Select
+                      id="manager"
+                      value={newLab.labManagerId}
+                      onChange={(e) => setNewLab({ ...newLab, labManagerId: e.target.value })}
+                    >
+                      <option value="">Select a manager</option>
+                      {managers.map((manager) => (
+                        <option key={manager.id} value={manager.id}>
+                          {manager.firstName} {manager.lastName}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                  <Button type="submit" className="w-full">Create Lab</Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
