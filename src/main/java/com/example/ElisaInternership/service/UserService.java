@@ -24,6 +24,9 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
+    private com.example.ElisaInternership.repository.BookingRepository bookingRepository;
+
+    @Autowired
     private AuditService auditService;
 
     public User createUser(User user, Long labId, User currentUser) {
@@ -44,7 +47,7 @@ public class UserService {
         }
 
         user = userRepository.save(user);
-        auditService.logAction("USER_CREATED", "User", user.getId(), currentUser, 
+        auditService.logAction("USER_CREATED", "User", user.getId(), currentUser,
                 "User created: " + user.getUsername());
         return user;
     }
@@ -53,12 +56,12 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!user.getUsername().equals(updatedUser.getUsername()) && 
-            userRepository.existsByUsername(updatedUser.getUsername())) {
+        if (!user.getUsername().equals(updatedUser.getUsername()) &&
+                userRepository.existsByUsername(updatedUser.getUsername())) {
             throw new RuntimeException("Username is already taken");
         }
-        if (!user.getEmail().equals(updatedUser.getEmail()) && 
-            userRepository.existsByEmail(updatedUser.getEmail())) {
+        if (!user.getEmail().equals(updatedUser.getEmail()) &&
+                userRepository.existsByEmail(updatedUser.getEmail())) {
             throw new RuntimeException("Email is already in use");
         }
 
@@ -82,15 +85,49 @@ public class UserService {
         }
 
         user = userRepository.save(user);
-        auditService.logAction("USER_UPDATED", "User", user.getId(), currentUser, 
+        auditService.logAction("USER_UPDATED", "User", user.getId(), currentUser,
                 "User updated: " + user.getUsername());
         return user;
     }
 
+    @Autowired
+    private com.example.ElisaInternership.repository.AuditLogRepository auditLogRepository;
+
+    @Autowired
+    private com.example.ElisaInternership.repository.MaintenanceRepository maintenanceRepository;
+
     public void deleteUser(Long id, User currentUser) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        auditService.logAction("USER_DELETED", "User", user.getId(), currentUser, 
+
+        // Unassign user from any labs they manage
+        List<Lab> managedLabs = labRepository.findByLabManagerId(user.getId());
+        for (Lab lab : managedLabs) {
+            lab.setLabManager(null);
+            labRepository.save(lab);
+        }
+
+        // Delete user's bookings
+        List<com.example.ElisaInternership.model.Booking> userBookings = bookingRepository.findByUserId(user.getId());
+        bookingRepository.deleteAll(userBookings);
+
+        // Update audit logs to remove user reference
+        List<com.example.ElisaInternership.model.AuditLog> userLogs = auditLogRepository.findByUserId(user.getId());
+        for (com.example.ElisaInternership.model.AuditLog log : userLogs) {
+            log.setUser(null);
+            log.setDescription(log.getDescription() + " (User deleted)");
+            auditLogRepository.save(log);
+        }
+
+        // Unassign user from maintenance tasks
+        List<com.example.ElisaInternership.model.Maintenance> assignedTasks = maintenanceRepository
+                .findByAssignedTechnicianId(user.getId());
+        for (com.example.ElisaInternership.model.Maintenance task : assignedTasks) {
+            task.setAssignedTechnician(null);
+            maintenanceRepository.save(task);
+        }
+
+        auditService.logAction("USER_DELETED", "User", user.getId(), currentUser,
                 "User deleted: " + user.getUsername());
         userRepository.delete(user);
     }
@@ -110,9 +147,3 @@ public class UserService {
                 .toList();
     }
 }
-
-
-
-
-
-

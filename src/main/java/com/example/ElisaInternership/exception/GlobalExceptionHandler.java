@@ -34,13 +34,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleGenericException(Exception e) {
+        e.printStackTrace(); // Log the full stack trace
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("An error occurred: " + e.getMessage()));
     }
 }
-
-
-
-
-
-

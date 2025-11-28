@@ -1,6 +1,8 @@
 package com.example.ElisaInternership.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -32,8 +34,11 @@ public class User implements UserDetails {
 
     @NotBlank
     @Size(min = 6)
+
+    @NotBlank
+    @Size(min = 6)
     @Column(nullable = false)
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @NotBlank
@@ -58,7 +63,7 @@ public class User implements UserDetails {
 
     @ManyToOne
     @JoinColumn(name = "lab_id")
-    @JsonIgnore
+    @JsonIgnoreProperties({ "labManager", "equipment", "bookings" })
     private Lab assignedLab;
 
     @PrePersist
@@ -191,8 +196,3 @@ public class User implements UserDetails {
         ADMIN, LAB_MANAGER, INSTRUCTOR, STUDENT
     }
 }
-
-
-
-
-

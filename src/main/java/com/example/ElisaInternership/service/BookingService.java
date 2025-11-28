@@ -30,7 +30,11 @@ public class BookingService {
             throw new RuntimeException("Start time must be before end time");
         }
 
-        if (request.getStartTime().isBefore(LocalDateTime.now())) {
+        // Allow bookings that start within the current hour or later
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfCurrentHour = now.withMinute(0).withSecond(0).withNano(0);
+
+        if (request.getStartTime().isBefore(startOfCurrentHour)) {
             throw new RuntimeException("Cannot book in the past");
         }
 
@@ -50,11 +54,11 @@ public class BookingService {
         booking.setStartTime(request.getStartTime());
         booking.setEndTime(request.getEndTime());
         booking.setPurpose(request.getPurpose());
-        booking.setStatus(user.getRole() == User.Role.INSTRUCTOR ? 
-                Booking.BookingStatus.APPROVED : Booking.BookingStatus.PENDING);
+        booking.setStatus(user.getRole() == User.Role.INSTRUCTOR ? Booking.BookingStatus.APPROVED
+                : Booking.BookingStatus.PENDING);
 
         booking = bookingRepository.save(booking);
-        auditService.logAction("BOOKING_CREATED", "Booking", booking.getId(), user, 
+        auditService.logAction("BOOKING_CREATED", "Booking", booking.getId(), user,
                 "Booking created for lab: " + lab.getName());
         return booking;
     }
@@ -84,7 +88,7 @@ public class BookingService {
         booking.setPurpose(request.getPurpose());
 
         booking = bookingRepository.save(booking);
-        auditService.logAction("BOOKING_UPDATED", "Booking", booking.getId(), currentUser, 
+        auditService.logAction("BOOKING_UPDATED", "Booking", booking.getId(), currentUser,
                 "Booking updated");
         return booking;
     }
@@ -94,7 +98,7 @@ public class BookingService {
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
         booking.setStatus(Booking.BookingStatus.APPROVED);
         booking = bookingRepository.save(booking);
-        auditService.logAction("BOOKING_APPROVED", "Booking", booking.getId(), currentUser, 
+        auditService.logAction("BOOKING_APPROVED", "Booking", booking.getId(), currentUser,
                 "Booking approved");
         return booking;
     }
@@ -104,7 +108,7 @@ public class BookingService {
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
         booking.setStatus(Booking.BookingStatus.REJECTED);
         booking = bookingRepository.save(booking);
-        auditService.logAction("BOOKING_REJECTED", "Booking", booking.getId(), currentUser, 
+        auditService.logAction("BOOKING_REJECTED", "Booking", booking.getId(), currentUser,
                 "Booking rejected");
         return booking;
     }
@@ -114,14 +118,14 @@ public class BookingService {
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
         booking.setStatus(Booking.BookingStatus.CANCELLED);
         bookingRepository.save(booking);
-        auditService.logAction("BOOKING_CANCELLED", "Booking", booking.getId(), currentUser, 
+        auditService.logAction("BOOKING_CANCELLED", "Booking", booking.getId(), currentUser,
                 "Booking cancelled");
     }
 
     public void deleteBooking(Long id, User currentUser) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
-        auditService.logAction("BOOKING_DELETED", "Booking", booking.getId(), currentUser, 
+        auditService.logAction("BOOKING_DELETED", "Booking", booking.getId(), currentUser,
                 "Booking deleted");
         bookingRepository.delete(booking);
     }
@@ -147,9 +151,3 @@ public class BookingService {
         return bookingRepository.findByLabIdAndStartTimeBetween(labId, start, end);
     }
 }
-
-
-
-
-
-

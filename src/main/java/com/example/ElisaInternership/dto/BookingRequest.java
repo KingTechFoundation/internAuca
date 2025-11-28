@@ -1,6 +1,5 @@
 package com.example.ElisaInternership.dto;
 
-import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
@@ -9,11 +8,9 @@ public class BookingRequest {
     private Long labId;
 
     @NotNull(message = "Start time is required")
-    @Future(message = "Start time must be in the future")
     private LocalDateTime startTime;
 
     @NotNull(message = "End time is required")
-    @Future(message = "End time must be in the future")
     private LocalDateTime endTime;
 
     private String purpose;
@@ -51,9 +48,3 @@ public class BookingRequest {
         this.purpose = purpose;
     }
 }
-
-
-
-
-
-

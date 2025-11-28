@@ -1,5 +1,6 @@
 package com.example.ElisaInternership.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 
@@ -25,6 +26,7 @@ public class Equipment {
 
     @ManyToOne
     @JoinColumn(name = "lab_id", nullable = false)
+    @JsonIgnoreProperties({ "labManager", "equipment", "bookings" })
     private Lab lab;
 
     @Enumerated(EnumType.STRING)
@@ -44,6 +46,7 @@ public class Equipment {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "equipment", cascade = CascadeType.ALL)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<Maintenance> maintenanceHistory = new ArrayList<>();
 
     @PrePersist
@@ -153,4 +156,3 @@ public class Equipment {
         AVAILABLE, IN_USE, UNDER_MAINTENANCE, BROKEN
     }
 }
-

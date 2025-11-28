@@ -3,6 +3,8 @@ import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ToastProvider } from './components/ToastProvider';
 import { Navbar } from './components/Navbar';
+import { WhatsAppWidget } from './components/WhatsAppWidget';
+import { AIChatbot } from './components/AIChatbot';
 import { Landing } from './pages/Landing';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -21,6 +23,8 @@ function App() {
         <div className="min-h-screen bg-gray-50">
           <ToastProvider />
           <Navbar />
+          <WhatsAppWidget />
+          <AIChatbot />
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />

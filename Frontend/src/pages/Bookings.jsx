@@ -15,6 +15,7 @@ import { SearchBar } from '../components/SearchBar';
 import { Pagination } from '../components/Pagination';
 import { Calendar, Plus, Edit, Trash2, Check, X, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import { SuccessModal } from '../components/SuccessModal';
 
 export const Bookings = () => {
   const { user, isAdmin, isLabManager, isInstructor, isStudent } = useAuth();
@@ -62,26 +63,37 @@ export const Bookings = () => {
       setLabs(response.data.data || []);
     } catch (error) {
       console.error('Failed to load labs');
+      setLabs([]);
     }
   };
+
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Convert labId to number before sending
+      const bookingData = {
+        ...formData,
+        labId: parseInt(formData.labId, 10)
+      };
+
       if (editingItem) {
-        await bookingAPI.update(editingItem.id, formData);
-        showSuccess('Booking updated successfully');
+        await bookingAPI.update(editingItem.id, bookingData);
+        setSuccessMessage('Booking updated successfully');
       } else {
         if (isInstructor) {
-          await bookingAPI.createInstructor(formData);
+          await bookingAPI.createInstructor(bookingData);
         } else {
-          await bookingAPI.createStudent(formData);
+          await bookingAPI.createStudent(bookingData);
         }
-        showSuccess(isInstructor ? 'Booking created successfully' : 'Booking request submitted');
+        setSuccessMessage(isInstructor ? 'Booking created successfully' : 'Booking request submitted');
       }
       setIsDialogOpen(false);
       resetForm();
       loadBookings();
+      setShowSuccessModal(true);
     } catch (error) {
       showError(error.response?.data?.message || 'Failed to save booking');
     }
@@ -152,8 +164,8 @@ export const Bookings = () => {
 
   const filteredBookings = bookings.filter((item) => {
     const matchesSearch = item.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.lab?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.user?.username.toLowerCase().includes(searchTerm.toLowerCase());
+      item.lab?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.user?.username.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'ALL' || item.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -432,6 +444,14 @@ export const Bookings = () => {
           </Card>
         )}
       </div>
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Success!"
+        message={successMessage}
+        actionLabel="Continue"
+      />
     </div>
   );
 };

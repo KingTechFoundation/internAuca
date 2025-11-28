@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { labAPI, userAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../hooks/useToast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
@@ -8,6 +9,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Select } from '../components/ui/select';
 import { Building2, MapPin, Users, Plus } from 'lucide-react';
+import { SuccessModal } from '../components/SuccessModal';
 
 export const Labs = () => {
   const { isAdmin } = useAuth();
@@ -15,6 +17,9 @@ export const Labs = () => {
   const [loading, setLoading] = useState(true);
   const [isAddLabOpen, setIsAddLabOpen] = useState(false);
   const [managers, setManagers] = useState([]);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const { showError } = useToast();
+
   const [newLab, setNewLab] = useState({
     name: '',
     location: '',
@@ -22,6 +27,7 @@ export const Labs = () => {
     type: 'MAIN_COMPUTER_LAB',
     labManagerId: ''
   });
+
   useEffect(() => {
     loadLabs();
     if (isAdmin) {
@@ -32,9 +38,10 @@ export const Labs = () => {
   const loadLabs = async () => {
     try {
       const response = await labAPI.getAll();
-      setLabs(response.data.data);
+      setLabs(response.data.data || []);
     } catch (error) {
       console.error('Failed to load labs:', error);
+      setLabs([]);
     } finally {
       setLoading(false);
     }
@@ -43,9 +50,10 @@ export const Labs = () => {
   const loadManagers = async () => {
     try {
       const response = await userAPI.getByRole('LAB_MANAGER');
-      setManagers(response.data.data);
+      setManagers(response.data.data || []);
     } catch (error) {
       console.error('Failed to load managers:', error);
+      setManagers([]);
     }
   };
 
@@ -66,9 +74,10 @@ export const Labs = () => {
         type: 'MAIN_COMPUTER_LAB',
         labManagerId: ''
       });
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Failed to create lab:', error);
-      alert(error.response?.data?.message || 'Failed to create lab');
+      showError(error.response?.data?.message || 'Failed to create lab');
     }
   };
 
@@ -224,8 +233,16 @@ export const Labs = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Success Modal */}
+        <SuccessModal
+          isOpen={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          title="Lab Created Successfully!"
+          message="The new laboratory has been added to the system."
+          actionLabel="Got it"
+        />
       </div>
     </div>
   );
 };
-
